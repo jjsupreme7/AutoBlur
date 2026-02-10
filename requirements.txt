@@ -1,0 +1,14 @@
+# Core
+pytesseract
+Pillow
+watchdog
+
+# Document formats
+openpyxl        # Excel (.xlsx)
+PyMuPDF         # PDF (.pdf)
+python-pptx     # PowerPoint (.pptx)
+extract-msg     # Outlook MSG (.msg)
+
+# Claude API (optional, for --instruction mode)
+anthropic
+python-dotenv

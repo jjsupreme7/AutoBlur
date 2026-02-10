@@ -7,5 +7,16 @@ __pycache__/
 .venv/
 venv/
 
+# Environment / secrets
+.env
+
+# Test files
+test_*.png
+test_*.xlsx
+test_*.pdf
+test_*.pptx
+test_*.eml
+*_redacted.*
+
 # macOS
 .DS_Store

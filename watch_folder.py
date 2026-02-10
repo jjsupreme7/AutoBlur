@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Folder watcher for auto-blur.
-Monitors the input folder and automatically processes new images.
+Folder watcher for AutoBlur.
+Monitors the input folder and automatically processes new files of all supported formats.
 """
 
 import time
@@ -9,15 +9,14 @@ import os
 import sys
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-from auto_blur import process_image
+from redactor.pipeline import redact_file, get_supported_extensions
 
-# Supported image extensions
-IMAGE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff', '.webp'}
 
-class ImageHandler(FileSystemEventHandler):
+class FileHandler(FileSystemEventHandler):
     def __init__(self, output_dir):
         self.output_dir = output_dir
         self.processed = set()
+        self.supported = get_supported_extensions()
 
     def on_created(self, event):
         if event.is_directory:
@@ -26,10 +25,9 @@ class ImageHandler(FileSystemEventHandler):
         filepath = event.src_path
         ext = os.path.splitext(filepath)[1].lower()
 
-        if ext not in IMAGE_EXTENSIONS:
+        if ext not in self.supported:
             return
 
-        # Avoid processing the same file multiple times
         if filepath in self.processed:
             return
 
@@ -39,29 +37,32 @@ class ImageHandler(FileSystemEventHandler):
         if os.path.exists(filepath):
             self.processed.add(filepath)
             print(f"\n{'='*50}")
-            print(f"New image detected!")
-            process_image(filepath, self.output_dir)
+            print(f"New file detected: {os.path.basename(filepath)}")
+            redact_file(filepath, self.output_dir)
             print(f"{'='*50}\n")
+
 
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     input_dir = os.path.join(script_dir, 'input')
     output_dir = os.path.join(script_dir, 'output')
 
-    # Create directories if they don't exist
     os.makedirs(input_dir, exist_ok=True)
     os.makedirs(output_dir, exist_ok=True)
+
+    supported = get_supported_extensions()
 
     print("=" * 50)
     print("  AUTO-BLUR FOLDER WATCHER")
     print("=" * 50)
     print(f"\nWatching: {input_dir}")
     print(f"Output:   {output_dir}")
-    print("\nDrop screenshots into the 'input' folder.")
-    print("Blurred versions will appear in 'output'.")
+    print(f"Formats:  {', '.join(sorted(supported))}")
+    print("\nDrop files into the 'input' folder.")
+    print("Redacted versions will appear in 'output'.")
     print("\nPress Ctrl+C to stop.\n")
 
-    event_handler = ImageHandler(output_dir)
+    event_handler = FileHandler(output_dir)
     observer = Observer()
     observer.schedule(event_handler, input_dir, recursive=False)
     observer.start()
@@ -75,6 +76,7 @@ def main():
 
     observer.join()
     print("Done.")
+
 
 if __name__ == "__main__":
     main()
